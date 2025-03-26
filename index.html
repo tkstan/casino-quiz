@@ -206,23 +206,34 @@
     }
 
     function showResult() {
-      document.getElementById('result').classList.add('active');
-      let profile = '';
+  document.getElementById('result').classList.add('active');
+  let profile = '';
 
-      if (choices.game1 === 'skipped' && choices.game2 === 'skipped' && choices.game3 === 'skipped') {
-        profile = "🧐 Observateur : Tu observes, mais tu préfères rester en dehors du jeu.";
-      } else if (score >= 3) {
-        profile = "🔥 Le Flambeur : Tu joues gros, tu vis fort !";
-      } else if (score >= 2) {
-        profile = "🎯 Le Tacticien : Tu prends des risques, mais pas sans réfléchir.";
-      } else if (score >= 1) {
-        profile = "🍀 Le Joueur Chill : Tu aimes t’amuser sans te prendre la tête.";
-      } else {
-        profile = "🧠 Le Stratège : Tu joues safe, toujours en contrôle.";
-      }
-
-      document.getElementById('profile').textContent = profile;
+  // Détection du pari "flambeur"
+  const betInfo = choices.game3;
+  let flambeurDirect = false;
+  if (betInfo && betInfo !== 'skipped') {
+    const [amountStr, result] = betInfo.split('_');
+    const amount = parseInt(amountStr);
+    if (amount > 100) {
+      flambeurDirect = true;
     }
+  }
+
+  if (choices.game1 === 'skipped' && choices.game2 === 'skipped' && choices.game3 === 'skipped') {
+    profile = "🧐 Observateur : Tu observes, mais tu préfères rester en dehors du jeu.";
+  } else if (flambeurDirect || score >= 3) {
+    profile = "🔥 Le Flambeur : Tu joues gros, tu vis fort !";
+  } else if (score >= 2) {
+    profile = "🎯 Le Tacticien : Tu prends des risques, mais pas sans réfléchir.";
+  } else if (score >= 1) {
+    profile = "🍀 Le Joueur Chill : Tu aimes t’amuser sans te prendre la tête.";
+  } else {
+    profile = "🧠 Le Stratège : Tu joues safe, toujours en contrôle.";
+  }
+
+  document.getElementById('profile').textContent = profile;
+}
 
     function restart() {
       step = 1;
