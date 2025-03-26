@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quel joueur de casino es-tu ?</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #fff;
+      color: #b30000;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+    }
+
+    .game {
+      display: none;
+    }
+
+    .active {
+      display: block;
+    }
+
+    button {
+      margin: 1rem;
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      background: #b30000;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .result {
+      font-size: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .coin {
+      font-size: 4rem;
+      margin-top: 1rem;
+      transition: transform 1s;
+      display: inline-block;
+    }
+
+    .coin.flip {
+      transform: rotateY(1440deg);
+    }
+
+    .slot {
+      font-size: 3rem;
+      margin: 1rem 0;
+      letter-spacing: 1rem;
+    }
+
+    .bet-buttons {
+      margin: 1rem auto;
+    }
+
+    input[type="number"] {
+      padding: 0.5rem;
+      font-size: 1rem;
+      width: 100px;
+      text-align: center;
+      border: 2px solid #b30000;
+      border-radius: 5px;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎰 Quel joueur de casino es-tu ?</h1>
+
+    <!-- GAME 1: Pile ou face -->
+    <div id="game1" class="game active">
+      <h2>🪙 Pile ou Face</h2>
+      <p>Tu viens d'arriver au casino. Tu trouves une pièce oubliée sur une table... Tu la lances pour décider de ta première action ?</p>
+      <div class="coin" id="coin" onclick="flipCoin()">🪙</div>
+      <div>
+        <button onclick="skipGame('game1')">Ne pas jouer</button>
+      </div>
+      <div id="coinResult"></div>
+    </div>
+
+    <!-- GAME 2: Machine à Sous -->
+    <div id="game2" class="game">
+      <h2>🎰 Machine à Sous</h2>
+      <p>Tu passes devant une machine qui brille. Elle te fait de l'œil. Vas-tu tenter un tirage ?</p>
+      <div class="slot" id="slotDisplay">❓ ❓ ❓</div>
+      <button onclick="playSlot()">Tourner la machine</button>
+      <button onclick="skipGame('game2')">Ne pas jouer</button>
+      <div id="slotResult"></div>
+    </div>
+
+    <!-- GAME 3: Pari 50/50 -->
+    <div id="game3" class="game">
+      <h2>🎲 Pari 50/50</h2>
+      <p>Un autre joueur te propose un pari simple : pile ou face, double ou rien. Combien de jetons mises-tu ?</p>
+      <input type="number" id="betAmount" placeholder="ex: 50" min="1" max="1000">
+      <div class="bet-buttons">
+        <button onclick="placeBet()">Parier</button>
+        <button onclick="skipGame('game3')">Refuser le pari</button>
+      </div>
+      <div id="betResult"></div>
+    </div>
+
+    <!-- RESULT -->
+    <div id="result" class="game">
+      <h2>🧠 Ton profil de joueur</h2>
+      <p class="result" id="profile"></p>
+      <button onclick="restart()">Rejouer</button>
+    </div>
+  </div>
+
+  <script>
+    let step = 1;
+    let score = 0;
+    let choices = { game1: null, game2: null, game3: null };
+
+    function nextGame() {
+      step++;
+      document.querySelectorAll('.game').forEach(g => g.classList.remove('active'));
+      const currentGame = document.getElementById(`game${step}`);
+      if (currentGame) {
+        currentGame.classList.add('active');
+      } else {
+        showResult();
+      }
+    }
+
+    function skipGame(game) {
+      choices[game] = 'skipped';
+      nextGame();
+    }
+
+    function flipCoin() {
+      const coin = document.getElementById('coin');
+      coin.classList.add('flip');
+      setTimeout(() => {
+        coin.classList.remove('flip');
+        const result = Math.random() < 0.5 ? 'Pile' : 'Face';
+        document.getElementById('coinResult').textContent = `Résultat : ${result}`;
+        choices.game1 = result;
+        score += result === 'Pile' ? 1 : 0;
+        setTimeout(() => nextGame(), 1500);
+      }, 1000);
+    }
+
+    function playSlot() {
+      const symbols = ['🍒', '🔔', '🍀', '7️⃣'];
+      let i = 0;
+      const interval = setInterval(() => {
+        const s1 = symbols[Math.floor(Math.random() * symbols.length)];
+        const s2 = symbols[Math.floor(Math.random() * symbols.length)];
+        const s3 = symbols[Math.floor(Math.random() * symbols.length)];
+        document.getElementById('slotDisplay').textContent = `${s1} ${s2} ${s3}`;
+        i++;
+        if (i > 15) {
+          clearInterval(interval);
+          let win = (s1 === s2 && s2 === s3);
+          document.getElementById('slotResult').textContent = win ? "🎉 JACKPOT !" : "Pas cette fois...";
+          choices.game2 = win ? 'win' : 'lose';
+          score += win ? 1 : 0;
+          setTimeout(() => nextGame(), 1500);
+        }
+      }, 100);
+    }
+
+    function placeBet() {
+      const input = document.getElementById('betAmount');
+      const amount = parseInt(input.value);
+      if (isNaN(amount) || amount <= 0) {
+        document.getElementById('betResult').textContent = "Entre un montant valide.";
+        return;
+      }
+      const win = Math.random() < 0.5;
+      document.getElementById('betResult').textContent = win ? `Tu as gagné ${amount * 2} jetons !` : `Tu as perdu ${amount} jetons...`;
+      choices.game3 = `${amount}_${win ? 'win' : 'lose'}`;
+      score += win ? (amount / 100) : 0;
+      setTimeout(() => nextGame(), 2000);
+    }
+
+    function showResult() {
+      document.getElementById('result').classList.add('active');
+      let profile = '';
+
+      if (choices.game1 === 'skipped' && choices.game2 === 'skipped' && choices.game3 === 'skipped') {
+        profile = "🧐 Observateur : Tu observes, mais tu préfères rester en dehors du jeu.";
+      } else if (score >= 3) {
+        profile = "🔥 Le Flambeur : Tu joues gros, tu vis fort !";
+      } else if (score >= 2) {
+        profile = "🎯 Le Tacticien : Tu prends des risques, mais pas sans réfléchir.";
+      } else if (score >= 1) {
+        profile = "🍀 Le Joueur Chill : Tu aimes t’amuser sans te prendre la tête.";
+      } else {
+        profile = "🧠 Le Stratège : Tu joues safe, toujours en contrôle.";
+      }
+
+      document.getElementById('profile').textContent = profile;
+    }
+
+    function restart() {
+      step = 1;
+      score = 0;
+      choices = { game1: null, game2: null, game3: null };
+      document.querySelectorAll('.game').forEach(g => g.classList.remove('active'));
+      document.getElementById('coinResult').textContent = '';
+      document.getElementById('slotResult').textContent = '';
+      document.getElementById('slotDisplay').textContent = '❓ ❓ ❓';
+      document.getElementById('betResult').textContent = '';
+      document.getElementById('betAmount').value = '';
+      document.getElementById('game1').classList.add('active');
+    }
+  </script>
+</body>
+</html>
